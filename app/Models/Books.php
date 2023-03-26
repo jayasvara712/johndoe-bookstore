@@ -13,16 +13,16 @@ class Books extends Model
 
     public function authors()
     {
-        return $this->belongsTo(authors::class);
+        return $this->belongsTo(Authors::class);
     }
 
     public function categories()
     {
-        return $this->belongsTo(categories::class);
+        return $this->belongsTo(Categories::class);
     }
 
     public function ratings()
     {
-        return $this->hasMany(ratings::class);
+        return $this->hasMany(Ratings::class);
     }
 }

@@ -18,6 +18,6 @@ class Authors extends Model
 
     public function ratings()
     {
-        return $this->hasManyThrough(ratings::class, books::class);
+        return $this->hasManyThrough(Ratings::class, Books::class);
     }
 }

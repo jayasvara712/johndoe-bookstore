@@ -13,6 +13,6 @@ class Categories extends Model
 
     public function books()
     {
-        return $this->hasMany(books::class);
+        return $this->hasMany(Books::class);
     }
 }

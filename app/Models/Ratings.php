@@ -13,6 +13,6 @@ class Ratings extends Model
 
     public function books()
     {
-        return $this->belongsTo(books::class);
+        return $this->belongsTo(Books::class);
     }
 }
