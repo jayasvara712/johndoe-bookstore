@@ -26,7 +26,7 @@ class BooksController extends Controller
             DB::raw('avg(rating) as average_rating'),
             DB::raw('count(rating) as voter')
         )
-            ->join('books', 'reviews.book_id', '=', 'books.id')
+            ->join('books', 'ratings.book_id', '=', 'books.id')
             ->join('authors', 'books.author_id', '=', 'authors.id')
             ->join('categories', 'books.category_id', '=', 'categories.id')
             ->where('books.name', 'LIKE', '%' . $search . '%')
@@ -37,7 +37,7 @@ class BooksController extends Controller
             ->take($listShown)
             ->get();
 
-        return view('book-list', compact('books', 'search', 'listShown'));
+        return view('list_book', compact('books', 'search', 'listShown'));
     }
 
     public function topAuthors()
@@ -46,58 +46,42 @@ class BooksController extends Controller
             'authors.name as author_name',
             DB::raw('count(rating) as voter')
         )
-            ->join('books', 'reviews.book_id', '=', 'books.id')
+            ->join('books', 'ratings.book_id', '=', 'books.id')
             ->join('authors', 'books.author_id', '=', 'authors.id')
             ->where('rating', '>', 5)
             ->groupBy('authors.name')
             ->orderByDesc('voter')
             ->take(10)
             ->get();
-        return view('top-authors', compact('authors'));
+        return view('top_author', compact('authors'));
     }
 
-    public function insertRating(Request $request)
+    public function insertRating()
     {
-        $authors = Authors::orderBy('name', 'asc')->get();
-        $bookAuthor = $request->author;
-        if ($bookAuthor) {
-            $authorSelected = Authors::findOrFail($bookAuthor);
-        } else {
-            $authorSelected = $authors->first();
-        }
-        $books = Books::select('name', 'id')
-            ->where('author_id', $authorSelected->id)
-            ->orderBy('name', 'asc')
-            ->get();
+        return view('input_rating', [
+            'title' => 'insert_rating',
+            'authors' => Authors::all()->sortBy('name')
+        ]);
+    }
 
-        if ($request->ajax()) {
-            return view('book', [
-                'books' => $books,
-            ]);
-        }
-        $list = view('book', [
-            'books' => $books,
-        ])->render();
+    public function select_book($author_id)
+    {
 
-        return view('insert-rating', compact('authorSelected', 'authors', 'list'));
+        $books = DB::table('books')->where('author_id', $author_id)->get();
+
+        echo json_encode($books);
     }
 
     public function storeRating(Request $request)
     {
 
-        $book = Books::findOrFail($request->book);
-        if ($book->author_id == $request->author) {
-            if ($request->rating >= 1 && $request->rating <= 10) {
-                Ratings::create([
-                    'book_id' => $request->book,
-                    'rating' => $request->rating
-                ]);
-                return redirect('/')->with('success', 'success add new book rating');
-            } else {
-                return redirect('/insert-rating')->with('faild', 'faild to add new rating, because the rating you entered not between 1 - 10 !. Maybe you are trying to change the value of the available input options ');
-            }
-        } else {
-            return redirect('/insert-rating')->with('faild', 'faild to add new rating, because the name of the book you entered and the name of the author you entered did not match !. Maybe you are trying to change the value of the available input options ');
-        }
+        $validateData = $request->validate([
+            'book_id' => 'required',
+            'rating' => 'required'
+        ]);
+
+        Ratings::create($validateData);
+
+        return redirect('/')->with('success', 'Rating Successfully Added!');
     }
 }
